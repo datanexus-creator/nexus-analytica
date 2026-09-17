@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS ANALYTICA 2026 | Data Science Club</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        nexusLightBg: '#f8fafc',
+                        nexusDark: '#030712',
+                        nexusNavy: '#0b1329',
+                        nexusCard: '#111c38',
+                        nexusViolet: '#7c3aed',
+                        nexusSky: '#0ea5e9',
+                        nexusGlow: '#a855f7'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #f8fafc;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        body.light-theme {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #030712;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed;
+        }
+        .glass-panel {
+            background: rgba(11, 19, 41, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(124, 58, 237, 0.2);
+            transition: all 0.3s ease;
+        }
+        body.light-theme .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(124, 58, 237, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+        .glass-panel:hover {
+            border-color: rgba(14, 165, 233, 0.4);
+            box-shadow: 0 0 25px rgba(124, 58, 237, 0.15);
+        }
+        .glow-text {
+            text-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
+        }
+        .glow-box {
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.25);
+        }
+        canvas#bgCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-nexusDark text-slate-100 min-h-screen relative selection:bg-nexusViolet selection:text-white">
+
+    <canvas id="bgCanvas"></canvas>
+
+    <div id="openingSequence" class="fixed inset-0 z-50 bg-nexusDark flex flex-col items-center justify-center transition-opacity duration-1000">
+        <div class="text-center px-4 max-w-4xl">
+            <div id="seqText" class="text-xl md:text-3xl font-mono tracking-widest text-nexusSky mb-6 uppercase opacity-0 transition-opacity duration-700">INITIALIZING...</div>
+            <div id="seqCountdown" class="text-7xl md:text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-nexusViolet to-nexusSky opacity-0 transition-all duration-500 scale-90"></div>
+        </div>
+        <button onclick="skipOpening()" class="absolute bottom-10 px-6 py-2 rounded-full border border-slate-700 text-slate-400 hover:text-white hover:border-nexusViolet text-xs tracking-widest uppercase transition-all">SKIP OPENING</button>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="mainApp" class="opacity-0 transition-opacity duration-1000 relative z-10 flex flex-col min-h-screen">
+
+        <header class="sticky top-0 z-40 glass-panel border-b border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="scrollToSection('intro')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-nexusViolet to-nexusSky flex items-center justify-center glow-box">
+                        <i class="fa-solid fa-network-wired text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="font-extrabold text-lg md:text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-nexusSky">DATA NEXUS</span>
+                        <span class="block text-[10px] tracking-widest text-nexusViolet font-mono">NEXUS ANALYTICA 2026</span>
+                    </div>
+                </div>
+                <nav class="hidden lg:flex items-center space-x-8 text-sm font-medium">
+                    <button onclick="scrollToSection('intro')" class="text-slate-300 hover:text-nexusSky transition-colors">Overview</button>
+                    <button onclick="scrollToSection('schedule')" class="text-slate-300 hover:text-nexusSky transition-colors">Schedule</button>
+                    <button onclick="scrollToSection('activities')" class="text-slate-300 hover:text-nexusSky transition-colors">Activities</button>
+                    <button onclick="scrollToSection('registration')" class="text-slate-300 hover:text-nexusSky transition-colors">Registration</button>
+                    <button onclick="scrollToSection('minilab')" class="text-slate-300 hover:text-nexusSky transition-colors text-nexusSky font-bold flex items-center gap-1.5"><i class="fa-solid fa-flask"></i> Mini Lab</button>
+                    <button onclick="scrollToSection('preparation')" class="text-slate-300 hover:text-nexusSky transition-colors">Preparation</button>
+                    <button onclick="scrollToSection('benefits')" class="text-slate-300 hover:text-nexusSky transition-colors">Benefits</button>
+                    <button onclick="scrollToSection('contact')" class="text-slate-300 hover:text-nexusSky transition-colors">Contact</button>
+                </nav>
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center text-nexusSky hover:scale-105 transition-all" title="Toggle Theme">
+                        <i id="themeIcon" class="fa-solid fa-moon"></i>
+                    </button>
+                    <button onclick="scrollToSection('registration')" class="hidden sm:inline-block px-5 py-2.5 rounded-xl bg-gradient-to-r from-nexusViolet to-nexusSky text-white font-semibold text-sm shadow-lg shadow-nexusViolet/30 hover:shadow-nexusSky/50 transition-all transform hover:-translate-y-0.5">Register Now</button>
+                </div>
+            </div>
+        </header>
+
+        <section id="intro" class="relative py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center flex flex-col items-center justify-center min-h-[85vh]">
+            <div class="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-nexusViolet/15 via-transparent to-transparent blur-3xl"></div>
+            
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel text-nexusSky text-xs font-mono uppercase tracking-widest mb-6 border border-nexusSky/30">
+                <span class="w-2 h-2 rounded-full bg-nexusSky animate-ping"></span> Department of Data Science Club Presentation
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 max-w-5xl leading-tight">
+                NEXUS ANALYTICA <span class="text-transparent bg-clip-text bg-gradient-to-r from-nexusViolet via-nexusSky to-white">2026</span>
+            </h1>
+
+            <p class="text-xl md:text-2xl text-slate-300 max-w-3xl mb-8 font-light italic">
+                “ENTER THE WORLD OF DATA. BUILD. DISCOVER. COMPETE.”
+            </p>
+
+            <p class="text-slate-400 max-w-2xl mb-12 text-sm md:text-base leading-relaxed">
+                Step into the ultimate cinematic data science championship. Unravel complex datasets, build breakthrough machine learning pipelines, visualize intelligence, and prove your mastery.
+            </p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl mb-12">
+                <div class="glass-panel p-6 rounded-2xl text-center transition-transform hover:scale-105">
+                    <div class="text-nexusSky text-2xl mb-2"><i class="fa-solid fa-graduation-cap"></i></div>
+                    <div class="font-bold text-lg tracking-wider">LEARN</div>
+                    <div class="text-xs text-slate-400 mt-1">Master advanced tools</div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl text-center transition-transform hover:scale-105">
+                    <div class="text-nexusViolet text-2xl mb-2"><i class="fa-solid fa-hammer"></i></div>
+                    <div class="font-bold text-lg tracking-wider">BUILD</div>
+                    <div class="text-xs text-slate-400 mt-1">Create intelligent solutions</div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl text-center transition-transform hover:scale-105">
+                    <div class="text-pink-500 text-2xl mb-2"><i class="fa-solid fa-trophy"></i></div>
+                    <div class="font-bold text-lg tracking-wider">COMPETE</div>
+                    <div class="text-xs text-slate-400 mt-1">Challenge top analysts</div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl text-center transition-transform hover:scale-105">
+                    <div class="text-emerald-400 text-2xl mb-2"><i class="fa-solid fa-compass"></i></div>
+                    <div class="font-bold text-lg tracking-wider">DISCOVER</div>
+                    <div class="text-xs text-slate-400 mt-1">Uncover hidden patterns</div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="scrollToSection('schedule')" class="px-8 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-white font-semibold border border-slate-700 transition-all">Explore Schedule</button>
+                <button onclick="scrollToSection('registration')" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-nexusViolet to-nexusSky text-white font-semibold shadow-lg shadow-nexusViolet/30 hover:shadow-nexusSky/50 transition-all">Secure Your Spot</button>
+            </div>
+        </section>
+
+        <section id="schedule" class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <span class="text-nexusSky font-mono text-xs tracking-widest uppercase">Chronological Timeline</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-2 mb-4">Event Schedule</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-nexusViolet to-nexusSky mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Day 1 -->
+                <div class="glass-panel p-8 rounded-3xl border border-nexusViolet/30 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-gradient-to-l from-nexusViolet to-transparent px-6 py-2 rounded-bl-2xl text-xs font-mono font-bold uppercase tracking-wider text-white">Day 1</div>
+                    <div class="text-nexusSky font-mono text-sm mb-1"><i class="fa-regular fa-calendar mr-2"></i> SEPTEMBER 28</div>
+                    <h3 class="text-2xl font-bold mb-8">Opening & Hackathon Kickoff</h3>
+
+                    <div class="space-y-6 relative border-l-2 border-slate-800 ml-3 pl-6">
+                        <div class="relative">
+                            <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-nexusSky border-4 border-nexusDark"></div>
+                            <span class="text-xs font-mono text-nexusSky bg-nexusSky/10 px-2.5 py-1 rounded-md">10:00 AM – 10:30 AM</span>
+                            <h4 class="text-lg font-bold mt-2">INAUGURATION</h4>
+                            <p class="text-slate-400 text-sm mt-1">Official opening ceremony, keynote address by data science faculty, and rules briefing.</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-nexusViolet border-4 border-nexusDark"></div>
+                            <span class="text-xs font-mono text-nexusViolet bg-nexusViolet/10 px-2.5 py-1 rounded-md">11:00 AM – 4:00 PM</span>
+                            <h4 class="text-lg font-bold mt-2">HACKATHON</h4>
+                            <p class="text-slate-400 text-sm mt-1">Intensive coding & modeling session. Team of 4. Build, train, and test data solutions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 2 -->
+                <div class="glass-panel p-8 rounded-3xl border border-nexusSky/30 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-gradient-to-l from-nexusSky to-transparent px-6 py-2 rounded-bl-2xl text-xs font-mono font-bold uppercase tracking-wider text-white">Day 2</div>
+                    <div class="text-nexusViolet font-mono text-sm mb-1"><i class="fa-regular fa-calendar mr-2"></i> SEPTEMBER 29</div>
+                    <h3 class="text-2xl font-bold mb-8">Competitions & Grand Finale</h3>
+
+                    <div class="space-y-6 relative border-l-2 border-slate-800 ml-3 pl-6">
+                        <div class="relative">
+                            <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-nexusSky border-4 border-nexusDark"></div>
+                            <span class="text-xs font-mono text-nexusSky bg-nexusSky/10 px-2.5 py-1 rounded-md">10:00 AM – 11:30 AM</span>
+                            <h4 class="text-lg font-bold mt-2">DATA DETECTIVE</h4>
+                            <p class="text-slate-400 text-sm mt-1">Clean messy datasets, fix anomalies, and extract hidden insights. Individual | Excel.</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-nexusViolet border-4 border-nexusDark"></div>
+                            <span class="text-xs font-mono text-nexusViolet bg-nexusViolet/10 px-2.5 py-1 rounded-md">11:40 AM – 1:00 PM</span>
+                            <h4 class="text-lg font-bold mt-2">VISUALIZATION BATTLE</h4>
+                            <p class="text-slate-400 text-sm mt-1">Transform raw figures into powerful interactive dashboards. Individual | Power BI.</p>
+                        </div>
+                        <div class="relative">
+                            <div class="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-pink-500 border-4 border-nexusDark"></div>
+                            <span class="text-xs font-mono text-pink-400 bg-pink-500/10 px-2.5 py-1 rounded-md">2:00 PM – 3:30 PM</span>
+                            <h4 class="text-lg font-bold mt-2">NEXUS QUIZ</h4>
+                            <p class="text-slate-400 text-sm mt-1">Test your overall data science & tech acumen. Team of 4 | Offline Registration.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="activities" class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <span class="text-nexusSky font-mono text-xs tracking-widest uppercase">Competitions & Challenges</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-2 mb-4">Event Activities</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-nexusViolet to-nexusSky mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Activity 1: Hackathon -->
+                <div class="glass-panel p-8 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-mono bg-nexusViolet/20 text-nexusViolet border border-nexusViolet/30">Day 1</span>
+                            <span class="text-xs font-mono text-slate-400">Team of 4</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Hackathon</h3>
+                        <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+                            A high-intensity coding marathon where teams solve real-world problems using machine learning, data engineering, and predictive modeling.
+                        </p>
+                        <div class="space-y-3 mb-6 text-sm">
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-clock text-nexusSky mt-1"></i>
+                                <div><strong class="text-white">Timing:</strong> Sept 28, 11:00 AM – 4:00 PM (5 Hours)</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-gear text-nexusViolet mt-1"></i>
+                                <div><strong class="text-white">Preparation:</strong> Familiarize with Python (Pandas, Scikit-Learn), Git, and Rapid Prototyping.</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-route text-emerald-400 mt-1"></i>
+                                <div><strong class="text-white">Flow:</strong> Problem Release → Idea Formulation → Architecture Plan → Model Build → Testing → Live Demo.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="scrollToSection('minilab'); switchLab('hackathon');" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-nexusSky font-semibold text-sm transition-all border border-slate-700 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flask"></i> Test in Hackathon Mini Lab
+                    </button>
+                </div>
+
+                <!-- Activity 2: Data Detective -->
+                <div class="glass-panel p-8 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-mono bg-nexusSky/20 text-nexusSky border border-nexusSky/30">Day 2</span>
+                            <span class="text-xs font-mono text-slate-400">Individual | Excel</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Data Detective</h3>
+                        <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+                            Unearth anomalies, clean messy datasets, handle missing values, and solve investigative business mysteries using advanced spreadsheet techniques.
+                        </p>
+                        <div class="space-y-3 mb-6 text-sm">
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-clock text-nexusSky mt-1"></i>
+                                <div><strong class="text-white">Timing:</strong> Sept 29, 10:00 AM – 11:30 AM (90 Mins)</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-gear text-nexusViolet mt-1"></i>
+                                <div><strong class="text-white">Preparation:</strong> Master Excel Formulas (XLOOKUP, INDEX/MATCH, Pivot Tables, Conditional Formatting).</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-route text-emerald-400 mt-1"></i>
+                                <div><strong class="text-white">Flow:</strong> Dataset Inspection → Duplicate Removal → Outlier Detection → Missing Value Imputation → Final Report.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="scrollToSection('minilab'); switchLab('detective');" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-nexusSky font-semibold text-sm transition-all border border-slate-700 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flask"></i> Test in Data Detective Lab
+                    </button>
+                </div>
+
+                <!-- Activity 3: Visualization Battle -->
+                <div class="glass-panel p-8 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-mono bg-nexusSky/20 text-nexusSky border border-nexusSky/30">Day 2</span>
+                            <span class="text-xs font-mono text-slate-400">Individual | Power BI</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Visualization Battle</h3>
+                        <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+                            Turn complex numbers into stunning, interactive dashboards that tell a compelling data story using Power BI.
+                        </p>
+                        <div class="space-y-3 mb-6 text-sm">
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-clock text-nexusSky mt-1"></i>
+                                <div><strong class="text-white">Timing:</strong> Sept 29, 11:40 AM – 1:00 PM (80 Mins)</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-gear text-nexusViolet mt-1"></i>
+                                <div><strong class="text-white">Preparation:</strong> Power BI Desktop, DAX measures, data modeling, and UX design principles.</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-route text-emerald-400 mt-1"></i>
+                                <div><strong class="text-white">Flow:</strong> Schema Import → DAX Calculations → Chart Designing → Theme Customization → Storytelling.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="scrollToSection('minilab'); switchLab('viz');" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-nexusSky font-semibold text-sm transition-all border border-slate-700 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flask"></i> Test in Visualization Lab
+                    </button>
+                </div>
+
+                <!-- Activity 4: Quiz -->
+                <div class="glass-panel p-8 rounded-3xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="px-3 py-1 rounded-full text-xs font-mono bg-pink-500/20 text-pink-400 border border-pink-500/30">Day 2</span>
+                            <span class="text-xs font-mono text-slate-400">Team of 4 | Offline Registration</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Nexus Quiz</h3>
+                        <p class="text-slate-300 text-sm mb-6 leading-relaxed">
+                            A rapid-fire battle of wits testing machine learning theory, statistics, SQL, data structures, and tech current affairs.
+                        </p>
+                        <div class="space-y-3 mb-6 text-sm">
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-clock text-nexusSky mt-1"></i>
+                                <div><strong class="text-white">Timing:</strong> Sept 29, 2:00 PM – 3:30 PM (90 Mins)</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-gear text-nexusViolet mt-1"></i>
+                                <div><strong class="text-white">Preparation:</strong> Probability, statistics, algorithms, and core data science concepts.</div>
+                            </div>
+                            <div class="flex items-start gap-2 text-slate-300">
+                                <i class="fa-solid fa-route text-emerald-400 mt-1"></i>
+                                <div><strong class="text-white">Flow:</strong> Preliminary Round → Buzzer Round → Rapid Fire → Grand Finale.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="scrollToSection('minilab'); switchLab('quiz');" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-nexusSky font-semibold text-sm transition-all border border-slate-700 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-flask"></i> Test in Quiz Mini Lab
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="registration" class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <div class="glass-panel p-10 md:p-16 rounded-3xl border border-nexusViolet/40 relative overflow-hidden text-center">
+                <div class="absolute inset-0 bg-gradient-to-r from-nexusViolet/10 via-transparent to-nexusSky/10 -z-10"></div>
+                
+                <span class="text-nexusSky font-mono text-xs tracking-widest uppercase">Secure Your Slot</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-2 mb-4">Registration Portal</h2>
+                <p class="text-rose-400 font-mono text-sm mb-2">Last Date to Register: SEPTEMBER 24, 2026</p>
+                <div class="inline-block bg-nexusViolet/20 border border-nexusViolet/40 px-6 py-2 rounded-full text-sm font-semibold text-nexusSky mb-10">
+                    “YOU CAN PARTICIPATE IN EVERY ACTIVITY.”
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-10">
+                    <!-- Hackathon Reg -->
+                    <div class="bg-nexusDark/60 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">Hackathon</h3>
+                            <p class="text-slate-400 text-xs mb-4">Team of 4 members required. Build a full data solution.</p>
+                        </div>
+                        <a href="https://forms.gle/Bbz1fxzLD6tFkdBr7" target="_blank" rel="noopener noreferrer" class="w-full py-3 rounded-xl bg-gradient-to-r from-nexusViolet to-nexusSky text-white font-semibold text-sm shadow-lg shadow-nexusViolet/30 hover:opacity-95 transition-all text-center block">
+                            Register for Hackathon <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
+                        </a>
+                    </div>
+
+                    <!-- Data Detective & Viz Reg -->
+                    <div class="bg-nexusDark/60 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">Data Detective & Viz Battle</h3>
+                            <p class="text-slate-400 text-xs mb-4">Individual participation for Excel cleaning and Power BI dashboards.</p>
+                        </div>
+                        <a href="https://forms.gle/P9eERMa4gAKBG9RY9" target="_blank" rel="noopener noreferrer" class="w-full py-3 rounded-xl bg-gradient-to-r from-nexusViolet to-nexusSky text-white font-semibold text-sm shadow-lg shadow-nexusViolet/30 hover:opacity-95 transition-all text-center block">
+                            Register for Individual Events <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-xs"></i>
+                        </a>
+                    </div>
+
+                    <!-- Quiz Reg -->
+                    <div class="bg-nexusDark/60 p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">Nexus Quiz</h3>
+                            <p class="text-slate-400 text-xs mb-4">Team of 4. Offline registration exclusively through Data Nexus club members.</p>
+                        </div>
+                        <div class="w-full py-3 rounded-xl bg-slate-800 text-slate-400 font-semibold text-sm border border-slate-700 text-center cursor-default">
+                            Offline Registration Only
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-slate-400 text-xs">Need assistance? Reach out to club coordinators or email datanexus.csd@gmail.com</p>
+            </div>
+        </section>
+
+        <section id="minilab" class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <span class="text-nexusSky font-mono text-xs tracking-widest uppercase">Hands-On Practice Sandbox</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-2 mb-2">Interactive Mini Lab</h2>
+                <p class="text-amber-400 text-sm font-mono mb-4">“SAMPLE PRACTICE — NOT ACTUAL COMPETITION CONTENT.”</p>
+                <div class="w-24 h-1 bg-gradient-to-r from-nexusViolet to-nexusSky mx-auto rounded-full"></div>
+            </div>
+
+            <!-- Lab Selector Tabs -->
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+                <button onclick="switchLab('detective')" id="tab-detective" class="lab-tab px-5 py-2.5 rounded-xl font-semibold text-sm bg-nexusViolet text-white shadow-lg shadow-nexusViolet/30 transition-all">Data Detective Lab</button>
+                <button onclick="switchLab('viz')" id="tab-viz" class="lab-tab px-5 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Visualization Lab</button>
+                <button onclick="switchLab('hackathon')" id="tab-hackathon" class="lab-tab px-5 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Hackathon Pipeline</button>
+                <button onclick="switchLab('quiz')" id="tab-quiz" class="lab-tab px-5 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all">Quiz Sandbox</button>
+            </div>
+
+            <!-- Lab Container -->
+            <div class="glass-panel p-6 md:p-10 rounded-3xl border border-slate-800">
+                
+                <!-- LAB 1: Data Detective -->
+                <div id="content-detective" class="lab-content space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold">Messy Dataset Cleaner (Data Detective Preview)</h3>
+                            <p class="text-slate-400 text-sm">Click clean dataset to automatically resolve missing values, outliers, and duplicates.</p>
+                        </div>
+                        <button onclick="cleanDataset()" class="px-5 py-2.5 rounded-xl bg-nexusSky text-nexusDark font-bold text-sm hover:bg-sky-400 transition-all shadow-md">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Auto-Clean Dataset
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="messyTable" class="w-full text-left text-sm">
+                            <thead class="bg-slate-900/80 text-nexusSky font-mono text-xs uppercase">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">Name</th>
+                                    <th class="p-3">Score</th>
+                                    <th class="p-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 font-mono text-xs">
+                                <tr class="bg-rose-500/10">
+                                    <td class="p-3">101</td>
+                                    <td class="p-3">Alice Smith</td>
+                                    <td class="p-3 font-bold text-rose-400">MISSING</td>
+                                    <td class="p-3 text-rose-400">Error: NaN</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">102</td>
+                                    <td class="p-3">Bob Jones</td>
+                                    <td class="p-3">88</td>
+                                    <td class="p-3 text-emerald-400">Valid</td>
+                                </tr>
+                                <tr class="bg-rose-500/10">
+                                    <td class="p-3">102</td>
+                                    <td class="p-3">Bob Jones</td>
+                                    <td class="p-3">88</td>
+                                    <td class="p-3 text-rose-400">Duplicate Record</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">103</td>
+                                    <td class="p-3">Charlie Brown</td>
+                                    <td class="p-3 font-bold text-rose-400">-999</td>
+                                    <td class="p-3 text-rose-400">Invalid Outlier</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- LAB 2: Visualization Battle -->
+                <div id="content-viz" class="lab-content hidden space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 class="text-xl font-bold">Interactive Dashboard (Visualization Preview)</h3>
+                            <p class="text-slate-400 text-sm">Switch metrics to dynamically update sample data charts.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="updateChart('sales')" class="px-4 py-2 rounded-lg bg-nexusViolet text-xs font-semibold text-white">Model Accuracy</button>
+                            <button onclick="updateChart('users')" class="px-4 py-2 rounded-lg bg-slate-800 text-xs font-semibold text-slate-300 hover:bg-slate-700">Dataset Sizes</button>
+                        </div>
+                    </div>
+                    <div class="h-[350px] w-full relative flex items-center justify-center">
+                        <canvas id="miniChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- LAB 3: Hackathon Pipeline -->
+                <div id="content-hackathon" class="lab-content hidden space-y-6">
+                    <div>
+                        <h3 class="text-xl font-bold">Hackathon Lifecycle Pipeline</h3>
+                        <p class="text-slate-400 text-sm">Click each phase to simulate the development lifecycle of your hackathon project.</p>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-7 gap-3">
+                        <button onclick="setPipeline(0)" id="pipe-0" class="pipe-step p-4 rounded-xl bg-nexusViolet text-white font-bold text-xs text-center transition-all">1. Problem</button>
+                        <button onclick="setPipeline(1)" id="pipe-1" class="pipe-step p-4 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs text-center transition-all">2. Idea</button>
+                        <button onclick="setPipeline(2)" id="pipe-2" class="pipe-step p-4 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs text-center transition-all">3. Plan</button>
+                        <button onclick="setPipeline(3)" id="pipe-3" class="pipe-step p-4 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs text-center transition-all">4. Build</button>
+                        <button onclick="setPipeline(4)" id="pipe-4" class="pipe-step p-4 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs text-center transition-all">5. Test</button>
+                        <button onclick="setPipeline(5)" id="pipe-5" class="pipe-step p-4 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs text-center transition-all">6. Demo</button>
+                        <button onclick="setPipeline(6)" id="pipe-6" class="pipe-step p-4 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs text-center transition-all">7. Victory</button>
+                    </div>
+                    <div id="pipelineDesc" class="p-6 rounded-2xl bg-slate-900/90 border border-slate-800 font-mono text-sm text-nexusSky">
+                        Phase 1: Understand the core problem statement, evaluate evaluation metrics, and analyze sample data constraints.
+                    </div>
+                </div>
+
+                <!-- LAB 4: Quiz Sandbox -->
+                <div id="content-quiz" class="lab-content hidden space-y-6">
+                    <div>
+                        <h3 class="text-xl font-bold">Nexus Quiz Sample Sandbox</h3>
+                        <p class="text-slate-400 text-sm">Answer 3 sample questions to calculate your readiness score.</p>
+                    </div>
+                    <div id="quizContainer" class="space-y-6">
+                        <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800">
+                            <p class="font-bold text-sm mb-3">Q1: Which evaluation metric is best suited for imbalanced classification datasets?</p>
+                            <div class="space-y-2 text-sm">
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q1" value="0"> Accuracy</label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q1" value="1"> Precision / Recall / F1-Score</label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q1" value="0"> Mean Squared Error</label>
+                            </div>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800">
+                            <p class="font-bold text-sm mb-3">Q2: What is the primary purpose of regularization in machine learning?</p>
+                            <div class="space-y-2 text-sm">
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q2" value="1"> Preventing overfitting by penalizing complex weights</label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q2" value="0"> Increasing training dataset size</label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q2" value="0"> Speeding up GPU compilation</label>
+                            </div>
+                        </div>
+                        <div class="p-6 rounded-2xl bg-slate-900/80 border border-slate-800">
+                            <p class="font-bold text-sm mb-3">Q3: Which function is typically used in the output layer for binary classification?</p>
+                            <div class="space-y-2 text-sm">
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q3" value="0"> Softmax</label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q3" value="0"> ReLU</label>
+                                <label class="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 cursor-pointer hover:bg-slate-800"><input type="radio" name="q3" value="1"> Sigmoid</label>
+                            </div>
+                        </div>
+                        <button onclick="calculateQuiz()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-nexusViolet to-nexusSky text-white font-bold text-sm shadow-lg shadow-nexusViolet/30">Calculate Readiness Score</button>
+                        <div id="quizResult" class="hidden text-lg font-bold text-nexusSky"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="preparation" class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <span class="text-nexusSky font-mono text-xs tracking-widest uppercase">Mastery Blueprint</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-2 mb-4">Preparation Guide</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-nexusViolet to-nexusSky mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-nexusSky text-xl mb-3"><i class="fa-solid fa-book-open"></i></div>
+                    <h3 class="font-bold text-lg mb-2">What to Learn</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed">Fundamental statistics, exploratory data analysis, dashboard storytelling, machine learning algorithms, and prompt engineering.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-nexusViolet text-xl mb-3"><i class="fa-solid fa-laptop-code"></i></div>
+                    <h3 class="font-bold text-lg mb-2">What to Practice</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed">Python libraries (Pandas, Scikit-Learn), advanced Excel formulas, Power BI data modeling, and timed debugging exercises.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-pink-400 text-xl mb-3"><i class="fa-brands fa-youtube"></i></div>
+                    <h3 class="font-bold text-lg mb-2">YouTube Search Keywords</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed">“End-to-End Machine Learning Project”, “Advanced Excel Data Cleaning”, “Power BI Dashboard Masterclass”, “Data Science Hackathon Tips”.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl">
+                    <div class="text-emerald-400 text-xl mb-3"><i class="fa-solid fa-robot"></i></div>
+                    <h3 class="font-bold text-lg mb-2">How AI Can Help</h3>
+                    <p class="text-slate-300 text-xs leading-relaxed">Use AI assistants for boilerplate code generation, explaining complex error traces, brainstorming feature engineering ideas, and structuring dashboards.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="benefits" class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <div class="text-center mb-16">
+                <span class="text-nexusSky font-mono text-xs tracking-widest uppercase">Why Attend</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-2 mb-4">Event Benefits</h2>
+                <div class="w-24 h-1 bg-gradient-to-r from-nexusViolet to-nexusSky mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="glass-panel p-8 rounded-3xl flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-nexusViolet/20 text-nexusViolet flex items-center justify-center shrink-0 text-xl"><i class="fa-solid fa-microchip"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">Learn New Technology</h3>
+                        <p class="text-slate-400 text-sm">Gain hands-on exposure to cutting-edge AI tools and data platforms.</p>
+                    </div>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-nexusSky/20 text-nexusSky flex items-center justify-center shrink-0 text-xl"><i class="fa-solid fa-users"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">Network with Students and Faculty</h3>
+                        <p class="text-slate-400 text-sm">Connect with brilliant student innovators and experienced mentors.</p>
+                    </div>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-xl"><i class="fa-solid fa-certificate"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">Participation Certificates</h3>
+                        <p class="text-slate-400 text-sm">Receive official certificates endorsed by the Data Science Club.</p>
+                    </div>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-pink-500/20 text-pink-400 flex items-center justify-center shrink-0 text-xl"><i class="fa-solid fa-file-arrow-up"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">Improve Resume and LinkedIn Profile</h3>
+                        <p class="text-slate-400 text-sm">Add high-impact project experience and competition accolades to your profile.</p>
+                    </div>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-xl"><i class="fa-solid fa-rocket"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">Explore Future Opportunities</h3>
+                        <p class="text-slate-400 text-sm">Discover internships, collaborative research, and upcoming club projects.</p>
+                    </div>
+                </div>
+                <div class="glass-panel p-8 rounded-3xl flex items-start gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 text-xl"><i class="fa-solid fa-star"></i></div>
+                    <div>
+                        <h3 class="font-bold text-lg mb-1">Create Memorable Event Experiences</h3>
+                        <p class="text-slate-400 text-sm">Enjoy an immersive, cinematic data festival environment unlike any other.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            <div class="glass-panel p-10 md:p-16 rounded-3xl border border-slate-800 text-center max-w-4xl mx-auto">
+                <span class="text-nexusSky font-mono text-xs tracking-widest uppercase">Get in Touch</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold mt-2 mb-6">Contact & Connect</h2>
+                <p class="text-slate-300 text-sm mb-8">Have questions about registrations, problem statements, or guidelines? Reach out directly.</p>
+
+                <div class="flex flex-col sm:flex-row justify-center gap-6 mb-10 text-sm">
+                    <a href="mailto:datanexus.csd@gmail.com" class="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-nexusViolet transition-all">
+                        <i class="fa-solid fa-envelope text-nexusSky text-lg"></i>
+                        <span>datanexus.csd@gmail.com</span>
+                    </a>
+                    <a href="tel:6304335085" class="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-nexusViolet transition-all">
+                        <i class="fa-solid fa-phone text-nexusViolet text-lg"></i>
+                        <span>6304335085</span>
+                    </a>
+                </div>
+
+                <div class="flex justify-center gap-6">
+                    <a href="https://www.instagram.com/datanexus_drkvsrit?igsi=bGJ5eWVxNDh4b2kw" target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl text-pink-500 hover:bg-pink-500 hover:text-white transition-all shadow-lg" title="Instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+                    <a href="https://youtube.com/@datanexus_club?si=y_cqL54JJsX0g6TW" target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-xl text-red-500 hover:bg-red-600 hover:text-white transition-all shadow-lg" title="YouTube">
+                        <i class="fa-brands fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section id="finalScene" class="py-32 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center flex flex-col items-center justify-center min-h-screen">
+            <div class="space-y-6 text-xl md:text-3xl font-light text-slate-300 mb-16 italic">
+                <p class="transition-all duration-700 opacity-90">“Today, you enter as a participant.”</p>
+                <p class="transition-all duration-700 opacity-90">“Tomorrow, you may return as a builder.”</p>
+                <p class="transition-all duration-700 opacity-90">“Every idea creates another connection.”</p>
+                <p class="transition-all duration-700 opacity-90">“The data changes.”</p>
+                <p class="transition-all duration-700 opacity-90">“The technology evolves.”</p>
+                <p class="transition-all duration-700 opacity-90 font-semibold text-white">“But the journey continues.”</p>
+            </div>
+
+            <div class="glass-panel p-10 rounded-3xl border border-nexusViolet/40 w-full mb-12">
+                <h3 class="text-2xl md:text-3xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-nexusViolet to-nexusSky mb-2">DATA NEXUS</h3>
+                <p class="text-xs font-mono text-slate-400 tracking-widest uppercase mb-6">DATA SCIENCE CLUB</p>
+                <div class="text-3xl md:text-4xl font-extrabold mb-4">NEXUS ANALYTICA 2026</div>
+                <div class="text-lg font-mono text-nexusSky">SEE YOU AT THE NEXUS EVENT.</div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-6">
+                <button onclick="restartExperience()" class="px-8 py-4 rounded-xl bg-gradient-to-r from-nexusViolet to-nexusSky text-white font-bold text-base shadow-lg shadow-nexusViolet/40 hover:scale-105 transition-all">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> ENTER NEXUS
+                </button>
+                <button onclick="exitExperience()" class="px-8 py-4 rounded-xl bg-slate-800 text-slate-300 font-bold text-base border border-slate-700 hover:bg-slate-700 hover:text-white transition-all">
+                    <i class="fa-solid fa-power-off mr-2"></i> EXIT
+                </button>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="py-8 border-t border-slate-800/80 text-center text-xs text-slate-500 font-mono">
+            &copy; 2026 Data Nexus | Data Science Club. All Rights Reserved.
+        </footer>
+
+    </div>
+
+    <script>
+        // Opening Sequence Steps
+        const openingSteps = [
+            "DATA ANALYTICA",
+            "DEPARTMENT OF DATA SCIENCE",
+            "ENTER INTO THE NEXUS",
+            "ENTERING THE NEXUS WORLD"
+        ];
+
+        let seqIdx = 0;
+        const seqText = document.getElementById('seqText');
+        const seqCountdown = document.getElementById('seqCountdown');
+        const openingSequence = document.getElementById('openingSequence');
+        const mainApp = document.getElementById('mainApp');
+
+        function runOpeningSequence() {
+            if (seqIdx < openingSteps.length) {
+                seqText.style.opacity = 0;
+                setTimeout(() => {
+                    seqText.innerText = openingSteps[seqIdx];
+                    seqText.style.opacity = 1;
+                    seqIdx++;
+                    setTimeout(runOpeningSequence, 1200);
+                }, 300);
+            } else {
+                seqText.style.opacity = 0;
+                setTimeout(() => {
+                    seqText.innerText = "";
+                    runCountdown(3);
+                }, 500);
+            }
+        }
+
+        function runCountdown(num) {
+            if (num > 0) {
+                seqCountdown.innerText = num;
+                seqCountdown.style.opacity = 1;
+                seqCountdown.style.transform = "scale(1)";
+                setTimeout(() => {
+                    seqCountdown.style.opacity = 0;
+                    seqCountdown.style.transform = "scale(0.8)";
+                    setTimeout(() => runCountdown(num - 1), 400);
+                }, 600);
+            } else {
+                seqCountdown.innerText = "WELCOME TO NEXUS ANALYTICA 2026";
+                seqCountdown.className = "text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-nexusViolet to-nexusSky transition-all duration-700 px-4";
+                seqCountdown.style.opacity = 1;
+                setTimeout(() => {
+                    openingSequence.style.opacity = 0;
+                    setTimeout(() => {
+                        openingSequence.style.display = 'none';
+                        mainApp.style.opacity = 1;
+                    }, 1000);
+                }, 1800);
+            }
+        }
+
+        function skipOpening() {
+            openingSequence.style.opacity = 0;
+            setTimeout(() => {
+                openingSequence.style.display = 'none';
+                mainApp.style.opacity = 1;
+            }, 500);
+        }
+
+        window.onload = function() {
+            runOpeningSequence();
+            initCanvas();
+            initMiniChart();
+        };
+
+        // Smooth scroll helper
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            document.body.classList.toggle('light-theme');
+            const icon = document.getElementById('themeIcon');
+            if (document.body.classList.contains('light-theme')) {
+                icon.className = "fa-solid fa-sun";
+            } else {
+                icon.className = "fa-solid fa-moon";
+            }
+        }
+
+        // Background Data Particles Canvas
+        function initCanvas() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            const particles = [];
+            const count = Math.floor((width * height) / 25000);
+
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    radius: Math.random() * 1.5 + 0.5
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = 'rgba(124, 58, 237, 0.15)';
+                ctx.strokeStyle = 'rgba(14, 165, 233, 0.08)';
+                ctx.lineWidth = 1;
+
+                particles.forEach((p, index) => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > width) p.vx *= -1;
+                    if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#0ea5e9';
+                    ctx.fill();
+
+                    for (let j = index + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Mini Lab Tab Switching
+        function switchLab(tab) {
+            document.querySelectorAll('.lab-tab').forEach(t => {
+                t.className = "lab-tab px-5 py-2.5 rounded-xl font-semibold text-sm bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all";
+            });
+            document.querySelectorAll('.lab-content').forEach(c => c.classList.add('hidden'));
+
+            document.getElementById(`tab-${tab}`).className = "lab-tab px-5 py-2.5 rounded-xl font-semibold text-sm bg-nexusViolet text-white shadow-lg shadow-nexusViolet/30 transition-all";
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+
+            if (tab === 'viz' && window.myMiniChart) {
+                window.myMiniChart.update();
+            }
+        }
+
+        // Data Detective Clean simulation
+        function cleanDataset() {
+            const tbody = document.querySelector('#messyTable tbody');
+            tbody.innerHTML = `
+                <tr><td class="p-3">101</td><td class="p-3">Alice Smith</td><td class="p-3 font-bold text-emerald-400">92</td><td class="p-3 text-emerald-400">Cleaned (Imputed mean)</td></tr>
+                <tr><td class="p-3">102</td><td class="p-3">Bob Jones</td><td class="p-3 font-bold text-emerald-400">88</td><td class="p-3 text-emerald-400">Valid</td></tr>
+                <tr class="opacity-40"><td class="p-3">102</td><td class="p-3">Bob Jones</td><td class="p-3">88</td><td class="p-3 text-slate-500">Removed (Duplicate)</td></tr>
+                <tr><td class="p-3">103</td><td class="p-3">Charlie Brown</td><td class="p-3 font-bold text-emerald-400">75</td><td class="p-3 text-emerald-400">Cleaned (Outlier fixed)</td></tr>
+            `;
+        }
+
+        // Visualization Chart.js Demo
+        let myMiniChart = null;
+        function initMiniChart() {
+            const ctx = document.getElementById('miniChart').getContext('2d');
+            myMiniChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Model A', 'Model B', 'Model C', 'Model D', 'Model E'],
+                    datasets: [{
+                        label: 'Accuracy (%)',
+                        data: [88.5, 92.1, 95.4, 89.9, 96.8],
+                        backgroundColor: '#7c3aed',
+                        borderColor: '#0ea5e9',
+                        borderWidth: 1,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#f8fafc' } }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+        }
+
+        function updateChart(type) {
+            if (type === 'sales') {
+                myMiniChart.data.datasets[0].label = 'Accuracy (%)';
+                myMiniChart.data.datasets[0].data = [88.5, 92.1, 95.4, 89.9, 96.8];
+                myMiniChart.data.datasets[0].backgroundColor = '#7c3aed';
+            } else {
+                myMiniChart.data.datasets[0].label = 'Dataset Records (Thousands)';
+                myMiniChart.data.datasets[0].data = [120, 250, 410, 300, 520];
+                myMiniChart.data.datasets[0].backgroundColor = '#0ea5e9';
+            }
+            myMiniChart.update();
+        }
+
+        // Hackathon Pipeline Simulation
+        const pipelineTexts = [
+            "Phase 1: Understand the core problem statement, evaluate evaluation metrics, and analyze sample data constraints.",
+            "Phase 2: Brainstorm innovative architectural approaches, feature engineering strategies, and baseline models.",
+            "Phase 3: Establish task distribution among the 4 team members, setup Git repositories, and plan milestones.",
+            "Phase 4: Write robust Python code, train machine learning pipelines, and tune hyperparameters.",
+            "Phase 5: Run rigorous cross-validation, test edge cases, fix runtime memory leaks, and evaluate performance.",
+            "Phase 6: Prepare a compelling slide deck and live interactive presentation demonstrating impact and scalability.",
+            "Phase 7: Victory! Deploy your solution and present before the expert panel of judges."
+        ];
+
+        function setPipeline(step) {
+            document.querySelectorAll('.pipe-step').forEach((btn, idx) => {
+                if (idx === step) {
+                    btn.className = "pipe-step p-4 rounded-xl bg-nexusViolet text-white font-bold text-xs text-center transition-all shadow-lg shadow-nexusViolet/30";
+                } else {
+                    btn.className = "pipe-step p-4 rounded-xl bg-slate-800 text-slate-400 font-bold text-xs text-center transition-all hover:bg-slate-700 hover:text-white";
+                }
+            });
+            document.getElementById('pipelineDesc').innerText = pipelineTexts[step];
+        }
+
+        // Quiz Calculation
+        function calculateQuiz() {
+            let score = 0;
+            const q1 = document.querySelector('input[name="q1"]:checked');
+            const q2 = document.querySelector('input[name="q2"]:checked');
+            const q3 = document.querySelector('input[name="q3"]:checked');
+
+            if (q1 && q1.value === "1") score++;
+            if (q2 && q2.value === "1") score++;
+            if (q3 && q3.value === "1") score++;
+
+            const resultEl = document.getElementById('quizResult');
+            resultEl.classList.remove('hidden');
+            resultEl.innerText = `Your Readiness Score: ${score} / 3 Correct! ${score === 3 ? "🏆 Exceptional Readiness for Nexus Quiz!" : "Keep practicing and sharpening your concepts!"}`;
+        }
+
+        // Restart Experience
+        function restartExperience() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                location.reload();
+            }, 600);
+        }
+
+        // Exit Experience
+        function exitExperience() {
+            try {
+                window.close();
+            } catch(e) {}
+            document.body.innerHTML = `
+                <div class="flex flex-col items-center justify-center min-h-screen bg-nexusDark text-white p-6 text-center">
+                    <h1 class="text-3xl font-bold mb-4">You have exited the Nexus Analytica 2026 session.</h1>
+                    <p class="text-slate-400 mb-8">You may now close this browser tab safely or restart the experience.</p>
+                    <button onclick="location.reload()" class="px-6 py-3 rounded-xl bg-nexusViolet text-white font-bold">Return to Nexus</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
